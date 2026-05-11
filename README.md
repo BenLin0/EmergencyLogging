@@ -19,9 +19,17 @@ The buffer holds the **most recent** N records (default 30). Older records are d
 
 ## Installation
 
-No dependencies outside the standard library. Copy `emergency_logging.py` into your project.
+### Via pip (recommended)
 
-Requires Python 3.x.
+```bash
+pip install emergency-logging
+```
+
+### Manual
+
+No dependencies outside the standard library. Copy `emergency_logging.py` directly into your project.
+
+Requires Python 3.8+.
 
 ## Usage
 
