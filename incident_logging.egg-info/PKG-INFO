@@ -1,3 +1,18 @@
+Metadata-Version: 2.4
+Name: incident-logging
+Version: 0.3
+Summary: A Python logging handler that buffers DEBUG/INFO and flushes them only when WARNING or ERROR fires
+License-Expression: MIT
+Project-URL: Homepage, https://github.com/BenLin0/EmergencyLogging
+Keywords: logging,handler,debug,buffer,incident
+Classifier: Programming Language :: Python :: 3
+Classifier: Operating System :: OS Independent
+Classifier: Topic :: System :: Logging
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Dynamic: license-file
+
 # IncidentLogging
 
 A Python logging handler that stays silent during normal operation and only writes logs when something goes wrong.

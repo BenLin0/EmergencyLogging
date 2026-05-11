@@ -1,4 +1,19 @@
-# IncidentLogging
+Metadata-Version: 2.4
+Name: emergency-logging
+Version: 0.2
+Summary: A Python logging handler that buffers DEBUG/INFO and flushes them only when WARNING or ERROR fires
+License-Expression: MIT
+Project-URL: Homepage, https://github.com/BenLin0/EmergencyLogging
+Keywords: logging,handler,debug,buffer
+Classifier: Programming Language :: Python :: 3
+Classifier: Operating System :: OS Independent
+Classifier: Topic :: System :: Logging
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Dynamic: license-file
+
+# EmergencyLogging
 
 A Python logging handler that stays silent during normal operation and only writes logs when something goes wrong.
 
@@ -8,7 +23,7 @@ Verbose debug logging helps diagnose issues, but writing every `DEBUG` and `INFO
 
 ## How it works
 
-`IncidentHandler` wraps any standard `logging.Handler`. It buffers `DEBUG` and `INFO` records silently. The moment a `WARNING`, `ERROR`, or `CRITICAL` is emitted, it flushes the buffered context followed by the triggering message — then clears the buffer and starts over.
+`EmergencyHandler` wraps any standard `logging.Handler`. It buffers `DEBUG` and `INFO` records silently. The moment a `WARNING`, `ERROR`, or `CRITICAL` is emitted, it flushes the buffered context followed by the triggering message — then clears the buffer and starts over.
 
 ```
 Normal operation:        DEBUG INFO DEBUG INFO DEBUG INFO  →  (nothing written)
@@ -22,12 +37,12 @@ The buffer holds the **most recent** N records (default 30). Older records are d
 ### Via pip (recommended)
 
 ```bash
-pip install incident-logging
+pip install emergency-logging
 ```
 
 ### Manual
 
-No dependencies outside the standard library. Copy `incident_logging.py` directly into your project.
+No dependencies outside the standard library. Copy `emergency_logging.py` directly into your project.
 
 Requires Python 3.8+.
 
@@ -37,11 +52,11 @@ Requires Python 3.8+.
 
 ```python
 import logging
-from incident_logging import IncidentHandler
+from emergency_logging import EmergencyHandler
 
 logger = logging.getLogger("myapp")
 logger.setLevel(logging.DEBUG)
-logger.addHandler(IncidentHandler())
+logger.addHandler(EmergencyHandler())
 
 logger.debug("connecting to database")   # buffered
 logger.info("query executed in 4 ms")    # buffered
@@ -52,14 +67,14 @@ logger.error("connection pool exhausted") # flushes both lines above, then this
 
 ```python
 import logging
-from incident_logging import IncidentHandler
+from emergency_logging import EmergencyHandler
 
 stream = logging.StreamHandler()
 stream.setFormatter(logging.Formatter("%(levelname)s %(name)s: %(message)s"))
 
 logger = logging.getLogger("myapp")
 logger.setLevel(logging.DEBUG)
-logger.addHandler(IncidentHandler(target_handler=stream, buffer_size=50))
+logger.addHandler(EmergencyHandler(target_handler=stream, buffer_size=50))
 ```
 
 ### With RotatingFileHandler
@@ -69,19 +84,19 @@ The log file stays empty during normal operation and only grows when an incident
 ```python
 import logging
 from logging.handlers import RotatingFileHandler
-from incident_logging import IncidentHandler
+from emergency_logging import EmergencyHandler
 
 rotating = RotatingFileHandler("app.log", maxBytes=1024 * 1024, backupCount=5)
 rotating.setFormatter(logging.Formatter("%(asctime)s %(levelname)-8s %(name)s: %(message)s"))
 
 logger = logging.getLogger("myapp")
 logger.setLevel(logging.DEBUG)
-logger.addHandler(IncidentHandler(target_handler=rotating, buffer_size=30))
+logger.addHandler(EmergencyHandler(target_handler=rotating, buffer_size=30))
 ```
 
 ## API
 
-### `IncidentHandler(target_handler=None, buffer_size=30)`
+### `EmergencyHandler(target_handler=None, buffer_size=30)`
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
@@ -94,23 +109,23 @@ The handler passes through `WARNING`, `ERROR`, and `CRITICAL` records immediatel
 
 Python's standard library includes [`logging.handlers.MemoryHandler`](https://docs.python.org/3/library/logging.handlers.html#logging.handlers.MemoryHandler), which is the closest built-in equivalent. Here's how they differ:
 
-| | `MemoryHandler` | `IncidentHandler` |
-|---|---|---|
-| Flush trigger | `ERROR` (default) or buffer full | `WARNING` (default) |
-| Buffer full behaviour | Flushes the entire buffer immediately | Drops the **oldest** record, keeps the newest N |
-| After a flush | Buffer cleared | Buffer cleared |
+| | `MemoryHandler`                                   | `EmergencyHandler` |
+|---|---------------------------------------------------|---|
+| Flush trigger | `ERROR` (default) or buffer full                  | `WARNING` (default) |
+| Buffer full behaviour | Flushes the entire buffer immediately             | Drops the **oldest** record, keeps the newest N |
+| After a flush | Buffer cleared                                    | Buffer cleared |
 | Most recent context guaranteed | No — a busy logger flushes everything on capacity | Yes — you always get the last N lines before the incident |
 
-The practical difference: `MemoryHandler` doesn't miss anything in the log. `IncidentHandler` behaves like a ring buffer — it silently discards unimportant records that are too old to matter and always preserves the most recent context window.
+The practical difference:  `MemoryHandler` doesn't miss anything in the log. `EmergencyHandler` behaves like a ring buffer — it silently discards unimportant records that are too old to matter and always preserves the most recent context window.
 
 ## Recommended pattern: combine both
 
-Use a regular handler for full bookkeeping and an `IncidentHandler` for focused incident output. The regular handler captures everything for audit trails or offline analysis; the `IncidentHandler` surfaces only what's relevant when something goes wrong.
+Use a regular handler for full bookkeeping and an `EmergencyHandler` for focused incident output. The regular handler captures everything for audit trails or offline analysis; the `EmergencyHandler` surfaces only what's relevant when something goes wrong.
 
 ```python
 import logging
 from logging.handlers import RotatingFileHandler
-from incident_logging import IncidentHandler
+from emergency_logging import EmergencyHandler
 
 logger = logging.getLogger("myapp")
 logger.setLevel(logging.DEBUG)
@@ -123,7 +138,7 @@ logger.addHandler(audit)
 # Incident log — only emits when WARNING or above fires, with recent context
 incident = RotatingFileHandler("incidents.log", maxBytes=1024 * 1024, backupCount=3)
 incident.setFormatter(logging.Formatter("%(asctime)s %(levelname)-8s %(message)s"))
-logger.addHandler(IncidentHandler(target_handler=incident, buffer_size=30))
+logger.addHandler(EmergencyHandler(target_handler=incident, buffer_size=30))
 ```
 
 `audit.log` grows continuously and is the source of truth. `incidents.log` stays small and contains only the context windows around each problem — easy to tail in production or attach to a bug report.
@@ -137,5 +152,5 @@ python3 demo.py
 ## Running the tests
 
 ```bash
-python3 -m unittest test_incident_logging -v
+python3 -m unittest test_emergency_logging -v
 ```

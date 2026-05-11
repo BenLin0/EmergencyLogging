@@ -1,0 +1,8 @@
+LICENSE
+README.md
+emergency_logging.py
+pyproject.toml
+emergency_logging.egg-info/PKG-INFO
+emergency_logging.egg-info/SOURCES.txt
+emergency_logging.egg-info/dependency_links.txt
+emergency_logging.egg-info/top_level.txt

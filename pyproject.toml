@@ -3,13 +3,13 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "emergency-logging"
-version = "0.2"
+name = "incident-logging"
+version = "0.3"
 description = "A Python logging handler that buffers DEBUG/INFO and flushes them only when WARNING or ERROR fires"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.8"
-keywords = ["logging", "handler", "debug", "buffer"]
+keywords = ["logging", "handler", "debug", "buffer", "incident"]
 classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
@@ -17,7 +17,7 @@ classifiers = [
 ]
 
 [tool.setuptools]
-py-modules = ["emergency_logging"]
+py-modules = ["incident_logging"]
 
 [project.urls]
 Homepage = "https://github.com/BenLin0/EmergencyLogging"

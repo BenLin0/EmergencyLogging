@@ -2,7 +2,7 @@ import logging
 import collections
 
 
-class EmergencyHandler(logging.Handler):
+class IncidentHandler(logging.Handler):
     """
     Buffers DEBUG/INFO records and flushes them only when WARN or ERROR is emitted.
     Keeps the last `buffer_size` buffered records (oldest are dropped when full).

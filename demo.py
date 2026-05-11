@@ -1,5 +1,5 @@
 r"""
-Demo: EmergencyHandler buffers DEBUG/INFO silently until a WARNING or ERROR fires,
+Demo: IncidentHandler buffers DEBUG/INFO silently until a WARNING or ERROR fires,
 then dumps the recent context together with the triggering message.
 
 Also demonstrates wrapping a RotatingFileHandler so the log file only grows
@@ -7,9 +7,10 @@ when something worth investigating actually happens.
 """
 import logging
 import os
+import sys
 import tempfile
 from logging.handlers import RotatingFileHandler
-from emergency_logging import EmergencyHandler
+from incident_logging import IncidentHandler
 
 logging.basicConfig()  # root logger won't be used, but sets up format defaults
 
@@ -17,12 +18,11 @@ logger = logging.getLogger("demo")
 logger.setLevel(logging.DEBUG)
 logger.propagate = False
 
-import sys
 stream_handler = logging.StreamHandler(sys.stdout)
 stream_handler.setFormatter(logging.Formatter("%(levelname)-8s %(name)s: %(message)s"))
 
-emergency = EmergencyHandler(target_handler=stream_handler, buffer_size=10)
-logger.addHandler(emergency)
+incident = IncidentHandler(target_handler=stream_handler, buffer_size=10)
+logger.addHandler(incident)
 
 print("=== Normal operation — DEBUG/INFO are buffered silently ===")
 logger.debug("Starting request processing")
@@ -52,11 +52,11 @@ logger.error("Pipeline stalled")
 
 
 # ---------------------------------------------------------------------------
-# Demo 2: EmergencyHandler wrapping a RotatingFileHandler
+# Demo 2: IncidentHandler wrapping a RotatingFileHandler
 # ---------------------------------------------------------------------------
-print("\n\n=== Demo 2: EmergencyHandler + RotatingFileHandler ===\n")
+print("\n\n=== Demo 2: IncidentHandler + RotatingFileHandler ===\n")
 
-log_path = os.path.join(tempfile.gettempdir(), "emergency_demo.log")
+log_path = os.path.join(tempfile.gettempdir(), "incident_demo.log")
 
 rotating = RotatingFileHandler(
     log_path,
@@ -68,7 +68,7 @@ rotating.setFormatter(logging.Formatter("%(asctime)s %(levelname)-8s %(name)s: %
 file_logger = logging.getLogger("demo.file")
 file_logger.setLevel(logging.DEBUG)
 file_logger.propagate = False
-file_logger.addHandler(EmergencyHandler(target_handler=rotating, buffer_size=30))
+file_logger.addHandler(IncidentHandler(target_handler=rotating, buffer_size=30))
 
 print(f"Logging to: {log_path}")
 print("Emitting DEBUG/INFO — file stays empty until something goes wrong.")

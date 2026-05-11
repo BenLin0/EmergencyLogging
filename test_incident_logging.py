@@ -1,6 +1,6 @@
 import logging
 import unittest
-from emergency_logging import EmergencyHandler
+from incident_logging import IncidentHandler
 
 
 class CapturingHandler(logging.Handler):
@@ -20,7 +20,7 @@ class CapturingHandler(logging.Handler):
 
 def make_logger(buffer_size=30):
     capture = CapturingHandler()
-    handler = EmergencyHandler(target_handler=capture, buffer_size=buffer_size)
+    handler = IncidentHandler(target_handler=capture, buffer_size=buffer_size)
     logger = logging.getLogger(f"test.{id(handler)}")
     logger.setLevel(logging.DEBUG)
     logger.addHandler(handler)
@@ -28,7 +28,7 @@ def make_logger(buffer_size=30):
     return logger, handler, capture
 
 
-class TestEmergencyHandler(unittest.TestCase):
+class TestIncidentHandler(unittest.TestCase):
 
     def test_debug_and_info_are_not_emitted_immediately(self):
         logger, _, capture = make_logger()
@@ -85,7 +85,7 @@ class TestEmergencyHandler(unittest.TestCase):
 
     def test_default_buffer_size_is_30(self):
         capture = CapturingHandler()
-        handler = EmergencyHandler(target_handler=capture)
+        handler = IncidentHandler(target_handler=capture)
         self.assertEqual(handler.buffer_size, 30)
 
     def test_multiple_errors_each_flush_correctly(self):
