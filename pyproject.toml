@@ -1,21 +1,23 @@
 [build-system]
 requires = ["setuptools>=68"]
-build-backend = "setuptools.backends.legacy:build"
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "emergency-logging"
 version = "0.1.0"
 description = "A Python logging handler that buffers DEBUG/INFO and flushes them only when WARNING or ERROR fires"
 readme = "README.md"
-license = { file = "LICENSE" }
+license = "MIT"
 requires-python = ">=3.8"
 keywords = ["logging", "handler", "debug", "buffer"]
 classifiers = [
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Topic :: System :: Logging",
 ]
+
+[tool.setuptools]
+py-modules = ["emergency_logging"]
 
 [project.urls]
 Homepage = "https://github.com/BenLin0/EmergencyLogging"
