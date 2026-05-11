@@ -94,14 +94,14 @@ The handler passes through `WARNING`, `ERROR`, and `CRITICAL` records immediatel
 
 Python's standard library includes [`logging.handlers.MemoryHandler`](https://docs.python.org/3/library/logging.handlers.html#logging.handlers.MemoryHandler), which is the closest built-in equivalent. Here's how they differ:
 
-| | `MemoryHandler` | `EmergencyHandler` |
-|---|---|---|
-| Flush trigger level | `ERROR` (default) | `WARNING` (default) |
-| Buffer full behaviour | Flushes the entire buffer immediately | Drops the **oldest** record, keeps the newest N |
-| After a flush | Buffer cleared | Buffer cleared |
+| | `MemoryHandler`                                   | `EmergencyHandler` |
+|---|---------------------------------------------------|---|
+| Flush trigger | `ERROR` (default) or buffer full                  | `WARNING` (default) |
+| Buffer full behaviour | Flushes the entire buffer immediately             | Drops the **oldest** record, keeps the newest N |
+| After a flush | Buffer cleared                                    | Buffer cleared |
 | Most recent context guaranteed | No — a busy logger flushes everything on capacity | Yes — you always get the last N lines before the incident |
 
-The practical difference: if your application logs heavily, `MemoryHandler` can dump hundreds of unrelated old messages when the buffer fills up. `EmergencyHandler` behaves like a ring buffer — it silently discards records that are too old to matter and always preserves the most recent context window.
+The practical difference:  `MemoryHandler` doesn't miss anything in the log. `EmergencyHandler` behaves like a ring buffer — it silently discards unimportant records that are too old to matter and always preserves the most recent context window.
 
 ## Running the demos
 
