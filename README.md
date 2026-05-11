@@ -103,6 +103,31 @@ Python's standard library includes [`logging.handlers.MemoryHandler`](https://do
 
 The practical difference:  `MemoryHandler` doesn't miss anything in the log. `EmergencyHandler` behaves like a ring buffer — it silently discards unimportant records that are too old to matter and always preserves the most recent context window.
 
+## Recommended pattern: combine both
+
+Use a regular handler for full bookkeeping and an `EmergencyHandler` for focused incident output. The regular handler captures everything for audit trails or offline analysis; the `EmergencyHandler` surfaces only what's relevant when something goes wrong.
+
+```python
+import logging
+from logging.handlers import RotatingFileHandler
+from emergency_logging import EmergencyHandler
+
+logger = logging.getLogger("myapp")
+logger.setLevel(logging.DEBUG)
+
+# Full audit log — every record, always
+audit = RotatingFileHandler("audit.log", maxBytes=10 * 1024 * 1024, backupCount=5)
+audit.setFormatter(logging.Formatter("%(asctime)s %(levelname)-8s %(message)s"))
+logger.addHandler(audit)
+
+# Incident log — only emits when WARNING or above fires, with recent context
+incident = RotatingFileHandler("incidents.log", maxBytes=1024 * 1024, backupCount=3)
+incident.setFormatter(logging.Formatter("%(asctime)s %(levelname)-8s %(message)s"))
+logger.addHandler(EmergencyHandler(target_handler=incident, buffer_size=30))
+```
+
+`audit.log` grows continuously and is the source of truth. `incidents.log` stays small and contains only the context windows around each problem — easy to tail in production or attach to a bug report.
+
 ## Running the demos
 
 ```bash
