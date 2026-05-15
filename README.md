@@ -8,7 +8,7 @@ Verbose debug logging helps diagnose issues, but writing every `DEBUG` and `INFO
 
 ## How it works
 
-`IncidentHandler` wraps any standard `logging.Handler`. It buffers `DEBUG` and `INFO` records silently. The moment a `WARNING`, `ERROR`, or `CRITICAL` is emitted, it flushes the buffered context followed by the triggering message — then clears the buffer and starts over.
+`IncidentHandler` wraps any standard `logging.Handler`. It buffers records below `trigger_level` silently. The moment a record at or above `trigger_level` is emitted, it flushes the buffered context followed by the triggering message — then clears the buffer and starts over. The default `trigger_level` is `WARNING`.
 
 ```
 Normal operation:        DEBUG INFO DEBUG INFO DEBUG INFO  →  (nothing written)
@@ -48,6 +48,22 @@ logger.info("query executed in 4 ms")    # buffered
 logger.error("connection pool exhausted") # flushes both lines above, then this
 ```
 
+### With a custom trigger level
+
+Raise the trigger to `ERROR` to buffer `WARNING` records along with `DEBUG`/`INFO`:
+
+```python
+import logging
+from incident_logging import IncidentHandler
+
+logger = logging.getLogger("myapp")
+logger.setLevel(logging.DEBUG)
+logger.addHandler(IncidentHandler(trigger_level=logging.ERROR))
+
+logger.warning("slow query: 2.3 s")  # buffered
+logger.error("database unreachable")  # flushes the warning above, then this
+```
+
 ### With a custom handler and buffer size
 
 ```python
@@ -81,14 +97,15 @@ logger.addHandler(IncidentHandler(target_handler=rotating, buffer_size=30))
 
 ## API
 
-### `IncidentHandler(target_handler=None, buffer_size=30)`
+### `IncidentHandler(target_handler=None, buffer_size=30, trigger_level=logging.WARNING)`
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
 | `target_handler` | `logging.Handler` | `StreamHandler()` | The handler that receives flushed records |
-| `buffer_size` | `int` | `30` | Maximum number of `DEBUG`/`INFO` records to buffer; oldest are dropped when exceeded |
+| `buffer_size` | `int` | `30` | Maximum number of buffered records to keep; oldest are dropped when exceeded |
+| `trigger_level` | `int` | `logging.WARNING` | Records at or above this level trigger a flush; records below are buffered |
 
-The handler passes through `WARNING`, `ERROR`, and `CRITICAL` records immediately (after flushing the buffer). `DEBUG` and `INFO` records are only ever written as part of a flush.
+Records at or above `trigger_level` are passed through immediately (after flushing the buffer). Records below `trigger_level` are only ever written as part of a flush.
 
 ## Comparison to `MemoryHandler`
 
@@ -96,7 +113,7 @@ Python's standard library includes [`logging.handlers.MemoryHandler`](https://do
 
 | | `MemoryHandler` | `IncidentHandler` |
 |---|---|---|
-| Flush trigger | `ERROR` (default) or buffer full | `WARNING` (default) |
+| Flush trigger | `ERROR` (default) or buffer full | configurable `trigger_level` (default `WARNING`) |
 | Buffer full behaviour | Flushes the entire buffer immediately | Drops the **oldest** record, keeps the newest N |
 | After a flush | Buffer cleared | Buffer cleared |
 | Most recent context guaranteed | No — a busy logger flushes everything on capacity | Yes — you always get the last N lines before the incident |
